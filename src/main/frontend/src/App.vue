@@ -11,7 +11,17 @@
       <meetings-page :username="authenticatedUsername"></meetings-page>
     </div>
     <div v-else>
-      <login-form @login="login($event)"></login-form>
+      <button :class="isRegistering ? 'button-outline' : ''"
+              @click="isRegistering = false">Zaloguj się
+      </button>
+      <button :class="!isRegistering ? 'button-outline' : ''"
+              @click="isRegistering = true">Zarejestruj się
+      </button>
+
+      <login-form @login="login($event)"
+                  v-if="!isRegistering"></login-form>
+      <login-form @login="register($event)"
+                  v-else></login-form>
     </div>
   </div>
 </template>
@@ -25,7 +35,8 @@
         components: {LoginForm, MeetingsPage},
         data() {
             return {
-                authenticatedUsername: ""
+                authenticatedUsername: "",
+                isRegistering: false
             };
         },
         methods: {
@@ -34,6 +45,15 @@
             },
             logout() {
                 this.authenticatedUsername = '';
+            },
+            register(user) {
+                this.$http.post('participants', user)
+                    .then(response => {
+                        // udało się
+                    })
+                    .catch(response => {
+                        // nie udało sie
+                    });
             }
         }
     };
@@ -50,3 +70,8 @@
   }
 </style>
 
+
+
+
+// WEBPACK FOOTER //
+// src/App.vue

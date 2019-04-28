@@ -17,19 +17,20 @@
             };
         },
         methods: {
-            enter() {
-                this.$emit("login", this.user);
+            enter(user) {
+                this.$http.post('participants', user)
+                    .then(response => {
+                        // poszlo
+                    })
+                    .catch(response => {
+                        // fail
+                    });
             }
         },
         computed: {
             labelOfTheButton() {
-                return this.buttonLabel || 'Zaloguj się';
+                return this.buttonLabel || 'Zarejestruj się';
             }
         }
     };
 </script>
-
-
-
-// WEBPACK FOOTER //
-// src/LoginForm.vue

@@ -17,22 +17,23 @@
       <button :class="!isRegistering ? 'button-outline' : ''"
               @click="isRegistering = true">Zarejestruj się
       </button>
-
       <login-form @login="login($event)"
                   v-if="!isRegistering"></login-form>
-      <login-form @login="register($event)"
-                  v-else></login-form>
+      <register-form @login="register($event)"
+                  v-else></register-form>
     </div>
+
   </div>
 </template>
 
 <script>
     import "milligram";
     import LoginForm from "./LoginForm";
+    import RegisterForm from "./RegisterForm"
     import MeetingsPage from "./meetings/MeetingsPage";
 
     export default {
-        components: {LoginForm, MeetingsPage},
+        components: {LoginForm, MeetingsPage, RegisterForm },
         data() {
             return {
                 authenticatedUsername: "",

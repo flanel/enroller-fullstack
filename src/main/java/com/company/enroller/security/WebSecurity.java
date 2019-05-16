@@ -16,4 +16,4 @@ import org.springframework.security.config.http.SessionCreationPolicy;
                     .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         }
     }
-}
+

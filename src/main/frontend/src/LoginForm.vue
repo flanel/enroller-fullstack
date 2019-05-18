@@ -18,7 +18,7 @@
         },
         methods: {
             enter() {
-                this.$emit("login", this.user);
+                this.$emit("submit", this.user);
             }
         },
         computed: {
@@ -28,8 +28,3 @@
         }
     };
 </script>
-
-
-
-// WEBPACK FOOTER //
-// src/LoginForm.vue

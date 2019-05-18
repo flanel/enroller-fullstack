@@ -1,87 +1,80 @@
-package com.company.enroller.controllers;
-
-import com.company.enroller.model.Meeting;
-import com.company.enroller.model.Participant;
-import com.company.enroller.persistence.MeetingService;
-import com.company.enroller.persistence.ParticipantService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+package com.company.enroller.persistence;
 
 import java.util.Collection;
 
-@RestController
-@RequestMapping("/api/meetings")
-public class MeetingRestController {
-    @Autowired
-    ParticipantService participantService;
+import org.hibernate.Query;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.springframework.stereotype.Component;
 
-    @Autowired
-    MeetingService meetingService;
+import com.company.enroller.exceptions.NoMeetingFoundException;
+import com.company.enroller.model.Meeting;
+import com.company.enroller.model.Participant;
 
-    @RequestMapping(value = "", method = RequestMethod.GET)
-    public ResponseEntity<?> getMeetings() {
-        Collection<Meeting> meetings = meetingService.getAll();
-        return new ResponseEntity<Collection<Meeting>>(meetings, HttpStatus.OK);
+@Component("meetingService")
+public class MeetingService {
+
+    Session session;
+
+    public MeetingService() {
+        session = DatabaseConnector.getInstance().getSession();
     }
 
+    public Collection<Meeting> getAll() {
+        String hql = "FROM Meeting";
+        Query query = this.session.createQuery(hql);
+        return query.list();
+    }
 
-
-    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
-    public ResponseEntity<?> getMeetingId(@PathVariable("id") String id) {
-        Meeting meeting = meetingService.findById(id);
+    public Meeting findById(long id) {
+        Meeting meeting = (Meeting) this.session.get(Meeting.class, id);
         if (meeting == null) {
-            return new ResponseEntity(HttpStatus.NOT_FOUND);
+            throw new NoMeetingFoundException("No meeting with id '" + id + "' was found");
         }
-        return new ResponseEntity<Meeting>(meeting, HttpStatus.OK);
+        return meeting;
     }
 
-    @RequestMapping(value = "", method = RequestMethod.POST)
-    public ResponseEntity<?> registerMeeting(@RequestBody Meeting meeting) {
-
-        Meeting tmpMeeting = meetingService.findById(Long.toString(meeting.getId()));
-
-        if (tmpMeeting !=  null) {
-            return new ResponseEntity("Unable to create. A meeting with id " + meeting.getId() + " already exist.", HttpStatus.CONFLICT);
-        } else {
-            meetingService.add(meeting);
-            return new ResponseEntity<Meeting>(meeting, HttpStatus.OK);
+    public Collection<Meeting> findMeetings(String title, String description, Participant participant, String sortMode) {
+        String hql = "FROM Meeting as meeting WHERE title LIKE :title AND description LIKE :description ";
+        if (participant!=null) {
+            hql += " AND :participant in elements(participants)";
         }
+        if (sortMode.equals("title")) {
+            hql += " ORDER BY title";
+        }
+        Query query = this.session.createQuery(hql);
+        query.setParameter("title", "%" + title + "%").setParameter("description", "%" + description + "%");
+        if (participant!=null) {
+            query.setParameter("participant", participant);
+        }
+
+        return query.list();
     }
 
-    @RequestMapping(value = "/{id}/participants/{participantLogin}", method = RequestMethod.POST)
-    public ResponseEntity<?> addParticipantToMeeting(@PathVariable("id") int id,
-                                                     @PathVariable("participantLogin") String participantLogin) {
-
-        Meeting tmpMeeting = meetingService.findById(Integer.toString(id));
-        Participant tmpParticipant = participantService.findByLogin(participantLogin);
-        if (tmpMeeting !=  null && tmpParticipant != null) {
-            tmpMeeting.addParticipant(tmpParticipant);
-            meetingService.edit(tmpMeeting);
-            return new ResponseEntity<Participant>(tmpParticipant, HttpStatus.OK);
-        } else if ( tmpMeeting == null ) {
-            return new ResponseEntity("Unable to add participant. A meeting with id " + id + " doesn't exist.", HttpStatus.CONFLICT);
-        } else if ( tmpParticipant == null ) {
-            return new ResponseEntity("Unable to add participant. A participant " + participantLogin + " doesn't exist.", HttpStatus.CONFLICT);
-        }
-        return new ResponseEntity<Participant>(tmpParticipant, HttpStatus.OK);
+    public void delete(Meeting meeting) {
+        Transaction transaction = this.session.beginTransaction();
+        this.session.delete(meeting);
+        transaction.commit();
     }
 
+    public void add(Meeting meeting) {
+        Transaction transaction = this.session.beginTransaction();
+        this.session.save(meeting);
+        transaction.commit();
+    }
 
+    public void update(Meeting meeting) {
+        Transaction transaction = this.session.beginTransaction();
+        this.session.merge(meeting);
+        transaction.commit();
+    }
 
-//
-//
-//	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
-//	public ResponseEntity<?> deleteParticipant(@PathVariable("id") String login) {
-//
-//		Participant participant = participantService.findByLogin(login);
-//
-//		if (participant  ==  null) {
-//			return new ResponseEntity("Unable to delete. A participant with login " + participant.getLogin() + " already removed.", HttpStatus.CONFLICT);
-//		} else {
-//			participantService.delete(participant);
-//			return new ResponseEntity<Participant>(participant, HttpStatus.OK);
-//		}
-//	}
+    public boolean alreadyExist(Meeting meeting) {
+        String hql = "FROM Meeting WHERE title=:title AND date=:date";
+        Query query = this.session.createQuery(hql);
+        Collection resultList = query.setParameter("title", meeting.getTitle()).setParameter("date", meeting.getDate())
+                .list();
+        return query.list().size() != 0;
+    }
+
 }

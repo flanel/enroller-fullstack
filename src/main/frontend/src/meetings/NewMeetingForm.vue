@@ -14,27 +14,36 @@
 </template>
 
 <script>
-    export default {
-        data() {
-            return {
-                newMeeting: {participants: []},
-                adding: false,
-                error: false
-            };
-        },
-        methods: {
-            addNewMeeting() {
-                this.error = false;
-                if (this.newMeeting.name) {
-                    this.$emit('added', this.newMeeting);
-                    this.newMeeting = {participants: []};
-                    this.adding = false;
-                } else {
-                    this.error = true;
-                }
-            }
+  export default {
+    data() {
+      return {
+        newMeeting: {participants: []},
+        adding: false,
+        error: false
+      };
+    },
+    methods: {
+      addNewMeeting() {
+        this.error = false;
+        if (this.newMeeting.name) {
+          this.$emit('added', this.newMeeting);
+          this.newMeeting = {participants: []};
+          this.adding = false;
+          this.$http.post('meetings', newMeeting).then(() => {
+            this.success('Spotkanie zostało dodane.');
+          })
+                  .catch(response => this.failure('Błąd przy dodawaniu spotkania. Kod odpowiedzi: ' + response.status));
+
+        } else {
+          this.error = true;
         }
+      }
+    },
+    mounted() {
+      const name = localStorage.getItem('name');
+      const desctiption = localStorage.getItem('desctiption');
     }
+  }
 </script>
 
 <style scoped>

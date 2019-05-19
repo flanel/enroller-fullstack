@@ -34,7 +34,6 @@ public class ParticipantService {
         Transaction transaction = connector.getSession().beginTransaction();
         connector.getSession().save(participant);
         transaction.commit();
-        System.out.println("Added participant login: " +participant.getLogin());
         return participant;
     }
 

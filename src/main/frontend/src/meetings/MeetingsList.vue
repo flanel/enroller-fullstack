@@ -35,12 +35,7 @@
 </template>
 
 <script>
-  export default {
-    props: ['meetings', 'username']
-  }
+    export default {
+        props: ['meetings', 'username']
+    }
 </script>
-
-
-
-// WEBPACK FOOTER //
-// src/meetings/MeetingsList.vue
